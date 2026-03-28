@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Daily Habit Tracker</title>
+
+<style>
+body {
+  font-family: -apple-system;
+  background: #0f172a;
+  color: white;
+  padding: 20px;
+}
+h1 { text-align: center; }
+
+.habit {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  margin: 8px 0;
+  background: #1e293b;
+  border-radius: 10px;
+}
+
+button {
+  background: #334155;
+  border: none;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 6px;
+}
+
+.done {
+  background: #22c55e !important;
+}
+
+#score {
+  text-align: center;
+  margin-top: 20px;
+  font-size: 22px;
+}
+
+/* CALENDAR */
+#calendar {
+  margin-top: 30px;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+}
+
+.day {
+  height: 40px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.green { background: #22c55e; }
+.yellow { background: #eab308; }
+.red { background: #ef4444; }
+.empty { background: #1e293b; }
+
+</style>
+</head>
+
+<body>
+
+<h1>Daily Tracker</h1>
+
+<div id="list"></div>
+<div id="score">Score: 0</div>
+
+<h3 style="margin-top:30px;">Progress</h3>
+<div id="calendar"></div>
+
+<script>
+const habits = [
+"Leetcode",
+"Apply to Jobs",
+"Studied",
+"Workout",
+"Kaggle",
+"Protein Shake",
+"Diet",
+"NoW",
+"NoP",
+"Screen Time",
+"Meditation",
+"Sleep On Time"
+];
+
+let state = JSON.parse(localStorage.getItem("habits")) || {};
+let history = JSON.parse(localStorage.getItem("history")) || {};
+
+function getTodayKey() {
+  const d = new Date();
+  return d.toISOString().split("T")[0];
+}
+
+function render() {
+  const list = document.getElementById("list");
+  list.innerHTML = "";
+
+  let count = 0;
+
+  habits.forEach(h => {
+    const done = state[h];
+
+    if(done) count++;
+
+    const div = document.createElement("div");
+    div.className = "habit";
+
+    const btn = document.createElement("button");
+    btn.innerText = done ? "Done" : "Mark";
+    if(done) btn.classList.add("done");
+
+    btn.onclick = () => {
+      state[h] = !state[h];
+      localStorage.setItem("habits", JSON.stringify(state));
+      render();
+    };
+
+    div.innerHTML = `<span>${h}</span>`;
+    div.appendChild(btn);
+    list.appendChild(div);
+  });
+
+  document.getElementById("score").innerText =
+    `Score: ${count}/${habits.length}`;
+
+  // SAVE DAILY SCORE
+  const today = getTodayKey();
+  history[today] = count;
+  localStorage.setItem("history", JSON.stringify(history));
+
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const cal = document.getElementById("calendar");
+  cal.innerHTML = "";
+
+  const days = Object.keys(history).sort().slice(-30);
+
+  days.forEach(day => {
+    const score = history[day];
+    const div = document.createElement("div");
+    div.classList.add("day");
+
+    if(score >= 9) div.classList.add("green");
+    else if(score >= 5) div.classList.add("yellow");
+    else div.classList.add("red");
+
+    div.innerText = score;
+    cal.appendChild(div);
+  });
+}
+
+render();
+</script>
+
+</body>
+</html>
