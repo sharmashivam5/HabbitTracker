@@ -102,23 +102,30 @@ const habits = [
 "Meditation","Sleep On Time"
 ];
 
-let state = JSON.parse(localStorage.getItem("habits")) || {};
 let history = JSON.parse(localStorage.getItem("history")) || {};
-
-function formatDate(date) {
-  return date.toDateString();
-}
+let selectedDate = getTodayKey();
 
 function getTodayKey() {
   return new Date().toISOString().split("T")[0];
 }
 
-// Show today's date
-document.getElementById("date").innerText = formatDate(new Date());
+function getDateKey(date) {
+  return date.toISOString().split("T")[0];
+}
+
+function isEditable(dateKey) {
+  const today = new Date();
+  const selected = new Date(dateKey);
+
+  const diff = (today - selected) / (1000 * 60 * 60 * 24);
+  return diff <= 1; // only today & yesterday editable
+}
 
 function render() {
   const list = document.getElementById("list");
   list.innerHTML = "";
+
+  const state = history[selectedDate] || {};
 
   let count = 0;
 
@@ -134,11 +141,17 @@ function render() {
     btn.innerText = done ? "Done" : "Mark";
     if(done) btn.classList.add("done");
 
-    btn.onclick = () => {
-      state[h] = !state[h];
-      localStorage.setItem("habits", JSON.stringify(state));
-      render();
-    };
+    if(isEditable(selectedDate)) {
+      btn.onclick = () => {
+        if(!history[selectedDate]) history[selectedDate] = {};
+        history[selectedDate][h] = !history[selectedDate][h];
+        localStorage.setItem("history", JSON.stringify(history));
+        render();
+      };
+    } else {
+      btn.disabled = true;
+      btn.style.opacity = 0.5;
+    }
 
     div.innerHTML = `<span>${h}</span>`;
     div.appendChild(btn);
@@ -147,10 +160,6 @@ function render() {
 
   document.getElementById("score").innerText =
     `Score: ${count}/${habits.length}`;
-
-  // Save today's score
-  history[getTodayKey()] = count;
-  localStorage.setItem("history", JSON.stringify(history));
 
   renderCalendar();
 }
@@ -168,29 +177,38 @@ function renderCalendar() {
     const date = new Date();
     date.setDate(i);
 
-    const key = date.toISOString().split("T")[0];
-    const score = history[key];
+    const key = getDateKey(date);
+    const state = history[key] || {};
+    const score = Object.values(state).filter(v => v).length;
 
     const div = document.createElement("div");
     div.classList.add("day");
 
     if(key === today) div.classList.add("today");
+    if(key === selectedDate) div.style.border = "2px solid #38bdf8";
 
-    if(score !== undefined) {
+    if(score > 0) {
       if(score >= 9) div.classList.add("green");
       else if(score >= 5) div.classList.add("yellow");
       else div.classList.add("red");
-      div.innerText = i;
     } else {
       div.classList.add("empty");
-      div.innerText = i;
     }
+
+    div.innerText = i;
+
+    div.onclick = () => {
+      selectedDate = key;
+      render();
+    };
 
     grid.appendChild(div);
   }
 
   cal.appendChild(grid);
 }
+
+document.getElementById("date").innerText = new Date().toDateString();
 
 render();
 </script>
