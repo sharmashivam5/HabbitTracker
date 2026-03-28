@@ -52,11 +52,7 @@ button {
   font-size: 20px;
 }
 
-/* CALENDAR GRID */
-#calendar {
-  margin-top: 20px;
-}
-
+/* CALENDAR */
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -74,6 +70,10 @@ button {
 
 .today {
   border: 2px solid white;
+}
+
+.selected {
+  border: 2px solid #38bdf8;
 }
 
 .green { background: #22c55e; }
@@ -98,13 +98,14 @@ button {
 <script>
 const habits = [
 "Leetcode","Apply to Jobs","Studied","Workout","Kaggle",
-"Protein Shake","Diet","No W","No P","Screen Time",
+"Protein Shake","Diet","No Weed","No Porn","Screen Time",
 "Meditation","Sleep On Time"
 ];
 
 let history = JSON.parse(localStorage.getItem("history")) || {};
 let selectedDate = getTodayKey();
 
+// ---------- DATE HELPERS ----------
 function getTodayKey() {
   return new Date().toISOString().split("T")[0];
 }
@@ -113,19 +114,30 @@ function getDateKey(date) {
   return date.toISOString().split("T")[0];
 }
 
+// ---------- EDIT RULE ----------
 function isEditable(dateKey) {
   const today = new Date();
+  today.setHours(0,0,0,0);
+
   const selected = new Date(dateKey);
+  selected.setHours(0,0,0,0);
 
   const diff = (today - selected) / (1000 * 60 * 60 * 24);
-  return diff <= 1; // only today & yesterday editable
+
+  return diff === 1; // ONLY yesterday editable
 }
 
+// ---------- RENDER ----------
 function render() {
+
+  // Ensure date exists
+  if (!history[selectedDate]) {
+    history[selectedDate] = {};
+  }
+
+  const state = history[selectedDate];
   const list = document.getElementById("list");
   list.innerHTML = "";
-
-  const state = history[selectedDate] || {};
 
   let count = 0;
 
@@ -139,11 +151,11 @@ function render() {
 
     const btn = document.createElement("button");
     btn.innerText = done ? "Done" : "Mark";
+
     if(done) btn.classList.add("done");
 
     if(isEditable(selectedDate)) {
       btn.onclick = () => {
-        if(!history[selectedDate]) history[selectedDate] = {};
         history[selectedDate][h] = !history[selectedDate][h];
         localStorage.setItem("history", JSON.stringify(history));
         render();
@@ -161,9 +173,18 @@ function render() {
   document.getElementById("score").innerText =
     `Score: ${count}/${habits.length}`;
 
+  // Top date + status
+  const status = isEditable(selectedDate)
+    ? "Editable (Yesterday)"
+    : "Locked";
+
+  document.getElementById("date").innerText =
+    new Date(selectedDate).toDateString() + " • " + status;
+
   renderCalendar();
 }
 
+// ---------- CALENDAR ----------
 function renderCalendar() {
   const cal = document.getElementById("calendar");
   cal.innerHTML = "";
@@ -185,7 +206,7 @@ function renderCalendar() {
     div.classList.add("day");
 
     if(key === today) div.classList.add("today");
-    if(key === selectedDate) div.style.border = "2px solid #38bdf8";
+    if(key === selectedDate) div.classList.add("selected");
 
     if(score > 0) {
       if(score >= 9) div.classList.add("green");
@@ -208,8 +229,7 @@ function renderCalendar() {
   cal.appendChild(grid);
 }
 
-document.getElementById("date").innerText = new Date().toDateString();
-
+// ---------- INIT ----------
 render();
 </script>
 
