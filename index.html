@@ -97,8 +97,8 @@ button {
 
 <script>
 const habits = [
-"Leetcode","Apply to Jobs","Studied","Workout","Kaggle",
-"Protein Shake","Diet","No W","No P","Screen Time",
+"Leetcode","Apply Jobs","Study","Workout & K",
+"Protein & Diet","No W","No P","Screen Time",
 "Meditation","Sleep On Time"
 ];
 
@@ -209,8 +209,8 @@ function renderCalendar() {
     if(key === selectedDate) div.classList.add("selected");
 
     if(score > 0) {
-      if(score >= 9) div.classList.add("green");
-      else if(score >= 5) div.classList.add("yellow");
+      if(score >= 7) div.classList.add("green");
+      else if(score >= 4) div.classList.add("yellow");
       else div.classList.add("red");
     } else {
       div.classList.add("empty");
