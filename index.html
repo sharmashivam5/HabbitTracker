@@ -124,7 +124,7 @@ function isEditable(dateKey) {
 
   const diff = (today - selected) / (1000 * 60 * 60 * 24);
 
-  return diff === 1; // ONLY yesterday editable
+  return diff === 0 || diff === 1; 
 }
 
 // ---------- RENDER ----------
