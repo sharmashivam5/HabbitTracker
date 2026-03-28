@@ -93,6 +93,13 @@ button {
 <div id="score"></div>
 
 <h3>Monthly Progress</h3>
+
+<div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0;">
+  <button onclick="changeMonth(-1)">◀</button>
+  <span id="monthLabel"></span>
+  <button onclick="changeMonth(1)">▶</button>
+</div>
+
 <div id="calendar"></div>
 
 <script>
@@ -104,14 +111,20 @@ const habits = [
 
 let history = JSON.parse(localStorage.getItem("history")) || {};
 let selectedDate = getTodayKey();
+let currentDate = new Date();
 
-// ---------- DATE HELPERS ----------
+// ---------- DATE HELPERS (FIXED) ----------
 function getTodayKey() {
-  return new Date().toISOString().split("T")[0];
+  const d = new Date();
+  return d.getFullYear() + "-" +
+    String(d.getMonth() + 1).padStart(2, "0") + "-" +
+    String(d.getDate()).padStart(2, "0");
 }
 
 function getDateKey(date) {
-  return date.toISOString().split("T")[0];
+  return date.getFullYear() + "-" +
+    String(date.getMonth() + 1).padStart(2, "0") + "-" +
+    String(date.getDate()).padStart(2, "0");
 }
 
 // ---------- EDIT RULE ----------
@@ -130,7 +143,6 @@ function isEditable(dateKey) {
 // ---------- RENDER ----------
 function render() {
 
-  // Ensure date exists
   if (!history[selectedDate]) {
     history[selectedDate] = {};
   }
@@ -173,14 +185,19 @@ function render() {
   document.getElementById("score").innerText =
     `Score: ${count}/${habits.length}`;
 
-  // Top date + status
   const status = isEditable(selectedDate)
-    ? "Editable (Yesterday)"
+    ? "Editable"
     : "Locked";
 
   document.getElementById("date").innerText =
     new Date(selectedDate).toDateString() + " • " + status;
 
+  renderCalendar();
+}
+
+// ---------- MONTH CHANGE ----------
+function changeMonth(offset) {
+  currentDate.setMonth(currentDate.getMonth() + offset);
   renderCalendar();
 }
 
@@ -192,13 +209,20 @@ function renderCalendar() {
   const grid = document.createElement("div");
   grid.className = "calendar-grid";
 
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  document.getElementById("monthLabel").innerText =
+    currentDate.toLocaleString("default", { month: "long", year: "numeric" });
+
   const today = getTodayKey();
 
-  for(let i = 1; i <= 31; i++) {
-    const date = new Date();
-    date.setDate(i);
-
+  for(let i = 1; i <= daysInMonth; i++) {
+    const date = new Date(year, month, i);
     const key = getDateKey(date);
+
     const state = history[key] || {};
     const score = Object.values(state).filter(v => v).length;
 
